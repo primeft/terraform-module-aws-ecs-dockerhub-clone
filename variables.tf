@@ -85,3 +85,9 @@ variable "region" {
   description = "AWS region (default to caller region)"
   default     = null
 }
+
+variable "ecr_repo_policies" {
+  type        = map(string)
+  description = "JSON ECR policies to add to one or more repos"
+  default     = {}
+}
