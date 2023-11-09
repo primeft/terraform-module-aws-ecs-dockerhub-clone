@@ -33,9 +33,9 @@ The resulting Dockerfile will be:
     RUN chmod 777 /etc/vault
     VOLUME ["/etc/vault"]
 
-Now you can mount the same /etc/vault folder in your application containers and run them as a sidecar container. Vault can put the .env to the shared folder.  
+Now you can mount the same /etc/vault folder in your application containers and run them as a sidecar container. Vault can put the .env to the shared folder.
 
-There are also other usecases for this. You might need to initialize a standard Docker image with environment variables with ENV that are not initialized when the container was built. This allows you to customize the behaviour of standard public containers without running your own build pipeline. 
+There are also other usecases for this. You might need to initialize a standard Docker image with environment variables with ENV that are not initialized when the container was built. This allows you to customize the behaviour of standard public containers without running your own build pipeline.
 
 A fully working setup can be found in the examples folder.
 
@@ -57,10 +57,12 @@ Check out our <a href="https://elasticscale.cloud" target="_blank" style="color:
 
 <img src="https://elasticscale-public.s3.eu-west-1.amazonaws.com/logo/Logo_ElasticScale_4kant-transparant.png" alt="ElasticScale logo" width="150"/>
 
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 |------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.1 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.22.0 |
 
 ## Providers
@@ -79,8 +81,9 @@ No modules.
 | Name | Type |
 |------|------|
 | [aws_codebuild_project.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codebuild_project) | resource |
-| [aws_ecr_lifecycle_policy.foopolicy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_lifecycle_policy) | resource | A copy and paste error from my end but this deletes the images automatically if they get stale
-| [aws_ecr_repository.ecr](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository) | resource |
+| [aws_ecr_lifecycle_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_lifecycle_policy) | resource |
+| [aws_ecr_repository.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository) | resource |
+| [aws_ecr_repository_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository_policy) | resource |
 | [aws_iam_role.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_ssm_parameter.accesstoken](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_parameter) | resource |
@@ -88,23 +91,35 @@ No modules.
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_iam_policy_document.assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.secrets](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_account_id"></a> [account\_id](#input\_account\_id) | AWS account ID | `string` | `null` | no |
+| <a name="input_account_id"></a> [account\_id](#input\_account\_id) | AWS account ID (default to caller ID) | `string` | `null` | no |
 | <a name="input_build_commands"></a> [build\_commands](#input\_build\_commands) | This allows you to add additional lines to the Dockerfile before pushing to ECR | `map(list(string))` | `{}` | no |
+| <a name="input_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#input\_cloudwatch\_log\_group\_name) | Name of the Cloudwatch log group to create. | `string` | `""` | no |
+| <a name="input_cloudwatch_log_stream_name"></a> [cloudwatch\_log\_stream\_name](#input\_cloudwatch\_log\_stream\_name) | Name of the Cloudwatch log stream to create. | `string` | `""` | no |
+| <a name="input_codebuild_project_name"></a> [codebuild\_project\_name](#input\_codebuild\_project\_name) | Name of the CodeBuild project | `string` | `""` | no |
 | <a name="input_containers"></a> [containers](#input\_containers) | Containers to clone including tags | `map(list(string))` | n/a | yes |
-| <a name="input_docker_hub_access_token"></a> [docker\_hub\_access\_token](#input\_docker\_hub\_access\_token) | Docker Hub access token (public repo read only access) | `string` | n/a | yes |
+| <a name="input_docker_hub_access_token"></a> [docker\_hub\_access\_token](#input\_docker\_hub\_access\_token) | Docker Hub access token (public repo read only access) | `string` | `""` | no |
+| <a name="input_docker_hub_access_token_secret_arn"></a> [docker\_hub\_access\_token\_secret\_arn](#input\_docker\_hub\_access\_token\_secret\_arn) | Secrets Manager secret ARN that contains Docker Hub access token (public repo read only access) | `string` | `""` | no |
+| <a name="input_docker_hub_access_token_secret_kms_arn"></a> [docker\_hub\_access\_token\_secret\_kms\_arn](#input\_docker\_hub\_access\_token\_secret\_kms\_arn) | KMS key ARN used to decrypt Docker Hub access token secret | `string` | `""` | no |
 | <a name="input_docker_hub_username"></a> [docker\_hub\_username](#input\_docker\_hub\_username) | Docker Hub username | `string` | n/a | yes |
+| <a name="input_ecr_repo_policies"></a> [ecr\_repo\_policies](#input\_ecr\_repo\_policies) | JSON ECR policies to add to one or more repos | `map(string)` | `{}` | no |
+| <a name="input_iam_role_name"></a> [iam\_role\_name](#input\_iam\_role\_name) | Name of the IAM role to create | `string` | `""` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Prefix to add before all pulled containers to prevent conflicts | `string` | `"ecsclone"` | no |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | Prefix to add to all resources | `string` | `"ecs-clone-"` | no |
-| <a name="input_region"></a> [region](#input\_region) | AWS region | `string` | `null` | no |
+| <a name="input_profile"></a> [profile](#input\_profile) | AWS profile to use | `string` | `null` | no |
+| <a name="input_region"></a> [region](#input\_region) | AWS region (default to caller region) | `string` | `null` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
+| <a name="output_iam_role_arn"></a> [iam\_role\_arn](#output\_iam\_role\_arn) | The ARN of the IAM role |
 | <a name="output_image_base_url"></a> [image\_base\_url](#output\_image\_base\_url) | The base URL for your ECR images from Docker Hub |
+| <a name="output_project_arn"></a> [project\_arn](#output\_project\_arn) | The ARN of the CodeBuild project |
+<!-- END_TF_DOCS -->
