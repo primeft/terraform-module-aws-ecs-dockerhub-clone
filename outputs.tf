@@ -1,6 +1,6 @@
 output "iam_role_arn" {
   description = "The ARN of the IAM role"
-  value       = aws_iam_role.main.arn
+  value       = try(data.aws_iam_role.main[0].arn, aws_iam_role.main[0].arn)
 }
 
 output "project_arn" {

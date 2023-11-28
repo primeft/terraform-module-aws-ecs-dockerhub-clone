@@ -32,10 +32,32 @@ variable "cloudwatch_log_stream_name" {
   default     = ""
 }
 
+variable "codebuild_build_timeout" {
+  description = "Number of minutes, from 5 to 480 (8 hours), to wait until timing out the build."
+  type        = number
+  default     = 480
+}
+
+variable "codebuild_compute_config" {
+  description = "Map of CodeBuild compute configuration"
+  type = object({
+    compute_type = optional(string, "BUILD_GENERAL1_SMALL")
+    image        = optional(string, "aws/codebuild/standard:7.0")
+    type         = optional(string, "LINUX_CONTAINER")
+  })
+  default = {}
+}
+
 variable "codebuild_project_name" {
   type        = string
   description = "Name of the CodeBuild project"
   default     = ""
+}
+
+variable "create_iam_role" {
+  type        = bool
+  description = "Whether to create the IAM role or now"
+  default     = true
 }
 
 variable "docker_hub_access_token" {
