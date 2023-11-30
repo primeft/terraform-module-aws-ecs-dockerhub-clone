@@ -79,29 +79,39 @@ data "aws_iam_policy_document" "main" {
   }
 }
 
+data "aws_iam_role" "main" {
+  count = !var.create_iam_role ? 1 : 0
+
+  name = coalesce(var.iam_role_name, "${var.prefix}codebuild-role")
+}
+
 resource "aws_iam_role" "main" {
+  count = var.create_iam_role ? 1 : 0
+
   name               = coalesce(var.iam_role_name, "${var.prefix}codebuild-role")
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy" "main" {
-  role   = aws_iam_role.main.name
+  count = var.create_iam_role ? 1 : 0
+
+  role   = aws_iam_role.main[0].name
   policy = data.aws_iam_policy_document.main.json
 }
 
 resource "aws_codebuild_project" "main" {
   name          = coalesce(var.codebuild_project_name, "${var.prefix}codebuild")
-  build_timeout = 480
-  service_role  = aws_iam_role.main.arn
+  build_timeout = var.codebuild_build_timeout
+  service_role  = try(data.aws_iam_role.main[0].arn, aws_iam_role.main[0].arn)
 
   artifacts {
     type = "NO_ARTIFACTS"
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "aws/codebuild/standard:7.0"
-    type         = "LINUX_CONTAINER"
+    compute_type = var.codebuild_compute_config["compute_type"]
+    image        = var.codebuild_compute_config["image"]
+    type         = var.codebuild_compute_config["type"]
 
     image_pull_credentials_type = "CODEBUILD"
     privileged_mode             = true
